@@ -73,7 +73,7 @@ texture3.wrapS = THREE.RepeatWrapping;
 texture3.wrapT = THREE.RepeatWrapping;
 texture.repeat.set(8,8);
 const geometry = new THREE.PlaneGeometry( 25, 25 );
-geometry.rotateX(math.PI/270)
+geometry.rotateX()
 const floorMaterial = new THREE.MeshStandardMaterial( {color: 0xffffff, map: texture, normalMap:texture2, roughnessMap:texture3} );
 const floor = new THREE.Mesh( geometry, floorMaterial );
 scene.add( floor );
