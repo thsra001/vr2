@@ -19,9 +19,9 @@ const camera = new THREE.PerspectiveCamera(
 );
 
 
-for (let i = 0; i < 15; i++) {
+for (let i = 0; i < 3; i++) {
   let light4 = new THREE.PointLight( 0xffffff, 1, 100 );
-light4.position.set( 0, -(i*50)+150, 3 );
+light4.position.set( randInt(-25,25), 3, randInt(-25,25) );
 scene.add( light4 );
 }
 function resizeRendererToDisplaySize(renderer) {
@@ -60,6 +60,28 @@ function loadModel(url,func) {
 	}
 );
 }
+const texture = new THREE.TextureLoader().load( 'tex/floor/color.jpg' );
+texture.wrapS = THREE.RepeatWrapping;
+texture.wrapT = THREE.RepeatWrapping;
+texture.repeat.set(8,8);
+const texture2 = new THREE.TextureLoader().load( 'tex/floor/normal.jpg' );
+texture2.wrapS = THREE.RepeatWrapping;
+texture2.wrapT = THREE.RepeatWrapping;
+texture.repeat.set(8,8);
+const texture3 = new THREE.TextureLoader().load( 'tex/floor/color.jpg' );
+texture3.wrapS = THREE.RepeatWrapping;
+texture3.wrapT = THREE.RepeatWrapping;
+texture.repeat.set(8,8);
+const geometry = new THREE.PlaneGeometry( 25, 25 );
+geometry.rotateX(-90)
+const floorMaterial = new THREE.MeshStandardMaterial( {color: 0xffffff, map: texture, normalMap:texture2, roughnessMap:texture3} );
+const floor = new THREE.Mesh( geometry, floorMaterial );
+scene.add( floor );
+function welcomRun(model){
+  model.position.set(0,3,12.5)
+}
+loadModel("tex/modals/welcome.glb",welcomRun)
+
 function dougRun(model) { //run on loaded model
 
 
@@ -79,17 +101,9 @@ function sofaRun(model) {
     model.name="sofa"}
 loadModel("tex/modals/end.glb",sofaRun)
 // spawns all the dougnuts
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 1; i++) {
   loadModel("tex/modals/"+randInt(1,9)+".glb",dougRun)
 }
-// loads "transparent" jpg joke
-const map = new THREE.TextureLoader().load( 'tex/fake.jpg' );
-const material = new THREE.SpriteMaterial( { map: map, color: 0xffffff } );
-
-const sprite = new THREE.Sprite( material );
-sprite.scale.set(10, 10, 1)
-scene.add( sprite );
-sprite.position.set(30,-30,-30)
 //skybox and loaders
 const cubeLoader = new THREE.CubeTextureLoader();
 const skyboss = cubeLoader.load( [
@@ -153,10 +167,6 @@ const dolly = new THREE.Group();
 function render() {
   // Render the scene and the camera
   renderer.render(scene, camera);
-for (let i = 0; i < dougs.length; i++) {
-  dougs[i].rotateX(0.009);
-  dougs[i].rotateY(0.008);
-}
   // resizing logic
   const canvas = renderer.domElement;
   camera.aspect = canvas.clientWidth / canvas.clientHeight;
