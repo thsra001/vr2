@@ -4,6 +4,9 @@ import {VRButton} from 'three/examples/jsm/webxr/VRButton';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory';
 
 let dougs=[];
+function rad(degrees) {
+  return degrees/57.2957795
+}
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
@@ -17,10 +20,12 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   10000
 );
+camera.translateY(1.6);
 
-
+const light = new THREE.AmbientLight( 0x888888 ); // soft white light
+scene.add( light );
 for (let i = 0; i < 3; i++) {
-  let light4 = new THREE.PointLight( 0xffffff, 1, 100 );
+  let light4 = new THREE.PointLight( 0xffffff, 0.1, 0, 2 );
 light4.position.set( randInt(-25,25), 3, randInt(-25,25) );
 scene.add( light4 );
 }
@@ -73,12 +78,12 @@ texture3.wrapS = THREE.RepeatWrapping;
 texture3.wrapT = THREE.RepeatWrapping;
 texture.repeat.set(8,8);
 const geometry = new THREE.PlaneGeometry( 25, 25 );
-geometry.rotateX(-90)
+geometry.rotateX(rad(-90))
 const floorMaterial = new THREE.MeshStandardMaterial( {color: 0xffffff, map: texture, normalMap:texture2, roughnessMap:texture3} );
 const floor = new THREE.Mesh( geometry, floorMaterial );
 scene.add( floor );
 function welcomRun(model){
-  model.position.set(0,3,12.5)
+  model.position.set(0,3,-12.5)
 }
 loadModel("tex/modals/welcome.glb",welcomRun)
 
@@ -87,7 +92,7 @@ function dougRun(model) { //run on loaded model
 
     model.position.set(
       randInt(-30,30)
-     ,randInt(-30,30)
+     ,randInt(0,30)
      ,randInt(-30,30))
     model.name="doug";
     dougs.push(model)
@@ -97,11 +102,12 @@ function dougRun(model) { //run on loaded model
 	}
 function sofaRun(model) {
 		scene.add( model );
-    model.position.set(30,-90,-20)
+    model.position.set(7,0,-3)
+    model.scale.set(0.2,0.2,0.2)
     model.name="sofa"}
 loadModel("tex/modals/end.glb",sofaRun)
 // spawns all the dougnuts
-for (let i = 0; i < 1; i++) {
+for (let i = 0; i < 14; i++) {
   loadModel("tex/modals/"+randInt(1,9)+".glb",dougRun)
 }
 //skybox and loaders
@@ -113,10 +119,6 @@ const skyboss = cubeLoader.load( [
 ] );
 scene.background=skyboss
 
-const pointerGeometry = new THREE.BufferGeometry().setFromPoints([
-     new THREE.Vector3(0, 0, 0),
-     new THREE.Vector3(0, 0, -1),
-   ]);
 // The renderer: something that draws 3D objects onto the canvas
 const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("#c"), antialias: true });
 
@@ -131,13 +133,12 @@ renderer.xr.setFramebufferScaleFactor(2.0);
 document.body.appendChild(VRButton.createButton(renderer));
 // controllers
    const controller1 = renderer.xr.getController(0);
+   controller1.name="con1"
    scene.add(controller1);
 
    const controller2 = renderer.xr.getController(1);
+   controller2.name="con2"
    scene.add(controller2);
-   const line2 = new THREE.Line(pointerGeometry);
-      line2.scale.z = 5;
-      controller2.add(line2);
    var controllerModelFactory = new XRControllerModelFactory();
 
    var controllerGrip1 = renderer.xr.getControllerGrip(0);
@@ -162,9 +163,18 @@ const dolly = new THREE.Group();
   dolly.add(controller2);
   dolly.add(controllerGrip1);
   dolly.add(controllerGrip2);
+  dolly.name="dolly"
+
+//controller raycasting
 
 //render loop for rendering scene and logic loop
 function render() {
+  for (let i = 0; i < dougs.length; i++) {
+  dougs[i].rotateX(0.009);
+  dougs[i].rotateY(0.008);
+}
+
+
   // Render the scene and the camera
   renderer.render(scene, camera);
   // resizing logic
