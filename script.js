@@ -176,7 +176,7 @@ class ControllerPickHelper extends THREE.EventDispatcher {
     this.tempMatrix = new THREE.Matrix4();
 
     const pointerGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, -0.01),
       new THREE.Vector3(0, 0, -1),
     ]);
 
@@ -238,7 +238,7 @@ class ControllerPickHelper extends THREE.EventDispatcher {
           // save its color
           this.objectToColorMap.set(pickedObject, pickedObject.material.emissive.getHex());
           // set its emissive color to flashing red/yellow
-          pickedObject.material.emissive.setHex((time * 8) % 2 > 1 ? 0xFF2000 : 0xFF0000);
+          pickedObject.material.emissive.setHex(0x3d3d3d);
         }
       } else {
         line.scale.z = 5;
