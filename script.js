@@ -82,7 +82,7 @@ geometry.rotateX(rad(-90))
 const floorMaterial = new THREE.MeshStandardMaterial( {color: 0xffffff, map: texture, normalMap:texture2, roughnessMap:texture3} );
 const floor = new THREE.Mesh( geometry, floorMaterial );
 scene.add( floor );
-function welcomRun(model){
+function welcomRun(model){ // runs on loaded welcome screen
   model.position.set(0,3,-12.5)
 }
 loadModel("tex/modals/welcome.glb",welcomRun)
