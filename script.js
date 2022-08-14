@@ -21,7 +21,8 @@ const camera = new THREE.PerspectiveCamera(
   10000
 );
 camera.translateY(1.6);
-
+const pickRoot = new THREE.Object3D();
+  scene.add(pickRoot);
 const light = new THREE.AmbientLight( 0x888888 ); // soft white light
 scene.add( light );
 for (let i = 0; i < 3; i++) {
@@ -89,7 +90,7 @@ loadModel("tex/modals/welcome.glb",welcomRun)
 
 function dougRun(model) { //run on loaded model
 
-
+   pickRoot.add(model)
     model.position.set(
       randInt(-30,30)
      ,randInt(0,30)
@@ -166,14 +167,117 @@ const dolly = new THREE.Group();
   dolly.name="dolly"
 
 //controller raycasting
+class ControllerPickHelper extends THREE.EventDispatcher {
+  constructor(scene) {
+    super();
+    this.raycaster = new THREE.Raycaster();
+    this.objectToColorMap = new Map();
+    this.controllerToObjectMap = new Map();
+    this.tempMatrix = new THREE.Matrix4();
+
+    const pointerGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, -1),
+    ]);
+
+    this.controllers = [];
+
+    const selectListener = (event) => {
+      const controller = event.target;
+      const selectedObject = this.controllerToObjectMap.get(event.target);
+      if (selectedObject) {
+        this.dispatchEvent({type: event.type, controller, selectedObject});
+      }
+    };
+
+    const endListener = (event) => {
+      const controller = event.target;
+      this.dispatchEvent({type: event.type, controller});
+    };
+
+    for (let i = 0; i < 2; ++i) {
+      const controller = renderer.xr.getController(i);
+      controller.addEventListener('select', selectListener);
+      controller.addEventListener('selectstart', selectListener);
+      controller.addEventListener('selectend', endListener);
+      scene.add(controller);
+
+      const line = new THREE.Line(pointerGeometry);
+      line.scale.z = 5;
+      controller.add(line);
+      this.controllers.push({controller, line});
+    }
+  }
+  reset() {
+    // restore the colors
+    this.objectToColorMap.forEach((color, object) => {
+      object.material.emissive.setHex(color);
+    });
+    this.objectToColorMap.clear();
+    this.controllerToObjectMap.clear();
+  }
+  update(pickablesParent, time) {
+    this.reset();
+    for (const {controller, line} of this.controllers) {
+      // cast a ray through the from the controller
+      this.tempMatrix.identity().extractRotation(controller.matrixWorld);
+      this.raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+      this.raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
+      // get the list of objects the ray intersected
+      const intersections = this.raycaster.intersectObjects(pickablesParent.children);
+      if (intersections.length) {
+        const intersection = intersections[0];
+        // make the line touch the object
+        line.scale.z = intersection.distance;
+        // pick the first object. It's the closest one
+        const pickedObject = intersection.object;
+        // save which object this controller picked
+        this.controllerToObjectMap.set(controller, pickedObject);
+        // highlight the object if we haven't already
+        if (this.objectToColorMap.get(pickedObject) === undefined) {
+          // save its color
+          this.objectToColorMap.set(pickedObject, pickedObject.material.emissive.getHex());
+          // set its emissive color to flashing red/yellow
+          pickedObject.material.emissive.setHex((time * 8) % 2 > 1 ? 0xFF2000 : 0xFF0000);
+        }
+      } else {
+        line.scale.z = 5;
+      }
+    }
+  }
+}
+
+const controllerToSelection = new Map();
+const pickHelper = new ControllerPickHelper(scene);
+pickHelper.addEventListener('selectstart', (event) => {
+  const {controller, selectedObject} = event;
+  const existingSelection = controllerToSelection.get(controller);
+  if (!existingSelection) {
+    controllerToSelection.set(controller, {
+      object: selectedObject,
+      parent: selectedObject.parent,
+    });
+    controller.attach(selectedObject);
+  }
+});
+
+pickHelper.addEventListener('selectend', (event) => {
+  const {controller} = event;
+  const selection = controllerToSelection.get(controller);
+  if (selection) {
+    controllerToSelection.delete(controller);
+    selection.parent.attach(selection.object);
+  }
+});
 
 //render loop for rendering scene and logic loop
-function render() {
+function render(time) {
+time *= 0.001;
   for (let i = 0; i < dougs.length; i++) {
   dougs[i].rotateX(0.009);
   dougs[i].rotateY(0.008);
 }
-
+pickHelper.update(pickRoot, time);
 
   // Render the scene and the camera
   renderer.render(scene, camera);
