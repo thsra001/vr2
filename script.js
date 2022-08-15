@@ -10,7 +10,7 @@ function rad(degrees) {
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1) ) + min;
 }
-
+const imgLoader = new THREE.TextureLoader()
 // The three.js scene: the 3D world where you put objects
 const scene = new THREE.Scene();
 // The camera
@@ -66,15 +66,15 @@ function loadModel(url,func) {
 	}
 );
 }
-const texture = new THREE.TextureLoader().load( 'tex/floor/color.jpg' );
+const texture = imgLoader.load( 'tex/floor/color.jpg' );
 texture.wrapS = THREE.RepeatWrapping;
 texture.wrapT = THREE.RepeatWrapping;
 texture.repeat.set(8,8);
-const texture2 = new THREE.TextureLoader().load( 'tex/floor/normal.jpg' );
+const texture2 = imgLoader.load( 'tex/floor/normal.jpg' );
 texture2.wrapS = THREE.RepeatWrapping;
 texture2.wrapT = THREE.RepeatWrapping;
 texture.repeat.set(8,8);
-const texture3 = new THREE.TextureLoader().load( 'tex/floor/color.jpg' );
+const texture3 = imgLoader.load( 'tex/floor/color.jpg' );
 texture3.wrapS = THREE.RepeatWrapping;
 texture3.wrapT = THREE.RepeatWrapping;
 texture.repeat.set(8,8);
@@ -108,8 +108,19 @@ function sofaRun(model) {
     model.name="sofa"}
 loadModel("tex/modals/end.glb",sofaRun)
 // spawns all the dougnuts
-for (let i = 0; i < 14; i++) {
+for (let i = 1; i < 14; i++) {
+  // spawns all the dougnuts
   loadModel("tex/modals/"+randInt(1,9)+".glb",dougRun)
+// maek bloks yaaaaaaaaa
+  let geometry2=new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  let material2 = new THREE.MeshStandardMaterial({
+  color: 0xFFFFFF,
+  map: imgLoader.load("tex/blocks/block"+randInt(1,7)+".jpg")          });
+let cube = new THREE.Mesh( geometry2, material2 );
+console.log(i*geometry2.parameters.height+geometry2.parameters.height/2)
+cube.position.set(-7,i*geometry2.parameters.height-geometry2.parameters.height/2,-2.7)
+cube.rotateY(randInt(-180,180));
+pickRoot.add(cube)
 }
 //skybox and loaders
 const cubeLoader = new THREE.CubeTextureLoader();
@@ -237,7 +248,7 @@ class ControllerPickHelper extends THREE.EventDispatcher {
         if (this.objectToColorMap.get(pickedObject) === undefined) {
           // save its color
           this.objectToColorMap.set(pickedObject, pickedObject.material.emissive.getHex());
-          // set its emissive color to flashing red/yellow
+          // set its emissive color to a bit of white
           pickedObject.material.emissive.setHex(0x3d3d3d);
         }
       } else {
