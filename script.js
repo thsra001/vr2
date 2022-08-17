@@ -141,7 +141,7 @@ for (let i = 1; i < 14; i++) {
   map: imgLoader.load("tex/blocks/block"+randInt(1,10)+".jpg")          });
 let cube = new THREE.Mesh( geometry2, material2 );
 var heig=geometry2.parameters.height
-cube.position.set(-7, 2 * (size + 0.02) * (i + 1),-2.7)
+cube.position.set(-7, 2 * (0.5 + 0.02) * (i + 1),-2.7)
 //cube.rotateY(randInt(-180,180));
 
 let cubeBody = new CANNON.Body({
