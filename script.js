@@ -1,9 +1,18 @@
 import * as THREE from 'three'
+import * as CANNON from 'cannon-es'
+import CannonDebugger from 'cannon-es-debugger'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
 import {VRButton} from 'three/examples/jsm/webxr/VRButton';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory';
 
+// cannonJS part   --friendship over with ammoJS😡, me fren wit cannonJS🗿🅱️ased🗿
+console.log(CANNON)
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.82, 0), // m/s²
+})
+//back to threeJS
 let dougs=[];
+let physicObj=[];
 function rad(degrees) {
   return degrees/57.2957795
 }
@@ -20,12 +29,17 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   10000
 );
+//CannonDebugger
+const cannonDebugger = new CannonDebugger(scene, world, {
+  // options...
+})
+//ee
 camera.translateY(1.6);
 const pickRoot = new THREE.Object3D();
   scene.add(pickRoot);
 const light = new THREE.AmbientLight( 0x888888 ); // soft white light
 scene.add( light );
-for (let i = 0; i < 3; i++) {
+for (let x = 0; x < 3; x++) {
   let light4 = new THREE.PointLight( 0xffffff, 0.1, 0, 2 );
 light4.position.set( randInt(-25,25), 3, randInt(-25,25) );
 scene.add( light4 );
@@ -82,6 +96,15 @@ const geometry = new THREE.PlaneGeometry( 25, 25 );
 geometry.rotateX(rad(-90))
 const floorMaterial = new THREE.MeshStandardMaterial( {color: 0xffffff, map: texture, normalMap:texture2, roughnessMap:texture3} );
 const floor = new THREE.Mesh( geometry, floorMaterial );
+
+const groundBody = new CANNON.Body({
+  type: CANNON.Body.STATIC,
+  shape: new CANNON.Box(new CANNON.Vec3(12.5,5,12.5)),
+  position: new CANNON.Vec3(0,-5,0)
+})
+groundBody.quaternion.setFromEuler(rad(0), 0, 0) // make it face up
+world.addBody(groundBody)
+floor.physic=groundBody
 scene.add( floor );
 function welcomRun(model){ // runs on loaded welcome screen
   model.position.set(0,3,-12.5)
@@ -115,12 +138,25 @@ for (let i = 1; i < 14; i++) {
   let geometry2=new THREE.BoxGeometry(0.5, 0.5, 0.5);
   let material2 = new THREE.MeshStandardMaterial({
   color: 0xFFFFFF,
-  map: imgLoader.load("tex/blocks/block"+randInt(1,7)+".jpg")          });
+  map: imgLoader.load("tex/blocks/block"+randInt(1,10)+".jpg")          });
 let cube = new THREE.Mesh( geometry2, material2 );
-console.log(i*geometry2.parameters.height+geometry2.parameters.height/2)
-cube.position.set(-7,i*geometry2.parameters.height-geometry2.parameters.height/2,-2.7)
-cube.rotateY(randInt(-180,180));
+var heig=geometry2.parameters.height
+cube.position.set(-7, 2 * (size + 0.02) * (i + 1),,-2.7)
+//cube.rotateY(randInt(-180,180));
+
+let cubeBody = new CANNON.Body({
+  mass: 1, // kg
+  shape: new CANNON.Box(new CANNON.Vec3(0.25,0.25,0.25)),
+position: cube.position,
+quaternion: cube.quaternion
+})
+console.log(cube)
+console.log(cubeBody)
+world.addBody(cubeBody)
+cube.physic=cubeBody
 pickRoot.add(cube)
+physicObj.push(cube)
+
 }
 //skybox and loaders
 const cubeLoader = new THREE.CubeTextureLoader();
@@ -287,6 +323,12 @@ time *= 0.001;
   for (let i = 0; i < dougs.length; i++) {
   dougs[i].rotateX(0.009);
   dougs[i].rotateY(0.008);
+}
+  world.fixedStep()
+  cannonDebugger.update() // Update the CannonDebugger meshes
+for (let x = 0; x < physicObj.length; x++) {
+  physicObj[x].position.copy(physicObj[x].physic.position)
+  physicObj[x].quaternion.copy(physicObj[x].physic.quaternion)
 }
 pickHelper.update(pickRoot, time);
 
