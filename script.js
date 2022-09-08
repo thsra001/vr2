@@ -3,10 +3,10 @@ import * as CANNON from 'cannon-es'
 import CannonDebugger from 'cannon-es-debugger'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
 import {VRButton} from 'three/examples/jsm/webxr/VRButton';
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory';
 
 // cannonJS part   --friendship over with ammoJS😡, me fren wit cannonJS🗿🅱️ased🗿
-console.log(CANNON)
 const world = new CANNON.World({
   gravity: new CANNON.Vec3(0, -9.82, 0), // m/s²
 })
@@ -69,7 +69,7 @@ function loadModel(url,func) {
 	// called while loading is progressing
 	function ( xhr ) {
 
-		console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+		
 
 	},
 	// called when loading has errors
@@ -124,6 +124,7 @@ function dougRun(model) { //run on loaded model
     model.rotateY(randInt(-10,10));
     model.rotateX(randInt(-10,10));
 	}
+
 function sofaRun(model) {
 		scene.add( model );
     model.position.set(7,0,-3)
@@ -150,8 +151,6 @@ let cubeBody = new CANNON.Body({
 position: cube.position,
 quaternion: cube.quaternion
 })
-console.log(cube)
-console.log(cubeBody)
 world.addBody(cubeBody)
 cube.physic=cubeBody
 pickRoot.add(cube)
@@ -175,10 +174,21 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0xffffff, 1);
 // Append the renderer canvas into <body>
 document.body.appendChild(renderer.domElement);
-// add vr button
-renderer.xr.enabled = true;
-renderer.xr.setFramebufferScaleFactor(2.0);
-document.body.appendChild(VRButton.createButton(renderer));
+// check if vr or non-vr mode
+ const params = (new URL(document.location)).searchParams;
+  const allowvr = params.get('allowvr') === 'true';
+  if (allowvr) {
+    renderer.xr.enabled = true;
+    renderer.xr.setFramebufferScaleFactor(2.0);
+ document.body.appendChild(VRButton.createButton(renderer.domElement));
+    document.querySelector('#vr').style.display = 'none';
+  } else {
+    // no VR, add some controls
+    var controls = new OrbitControls(camera, renderer.domElement);
+    camera.position.set( 0, 1.6, -2 );
+controls.update();
+    document.querySelector('#nonvr').style.display = 'none';
+  }
 // controllers
    const controller1 = renderer.xr.getController(0);
    controller1.name="con1"
@@ -320,6 +330,8 @@ pickHelper.addEventListener('selectend', (event) => {
 //render loop for rendering scene and logic loop
 function render(time) {
 time *= 0.001;
+  if (controls) {
+  controls.update()};
   for (let i = 0; i < dougs.length; i++) {
   dougs[i].rotateX(0.009);
   dougs[i].rotateY(0.008);
